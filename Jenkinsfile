@@ -1,7 +1,6 @@
 node {
    stage('Build') {
-         git 'https://github.com/veereshwaran/orders/'
-         sh 'mvn -DskipTests package'
+         git 'https://github.com/veereshwaran/payment/'
          sh "echo build docker"
          sh "docker-compose build"
    }
