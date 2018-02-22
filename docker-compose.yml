@@ -2,10 +2,10 @@ version: '2'
 
 services:
     payment:
-        build: 
+        build:
             context: .
             dockerfile: docker/payment/Dockerfile
-        image: weaveworksdemos/payment
+        image: veeresh27/payment
         hostname: payment
         restart: always
         cap_drop:
