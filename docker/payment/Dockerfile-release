@@ -11,7 +11,7 @@ RUN	addgroup -g ${SERVICE_GID} ${SERVICE_GROUP} && \
 
 WORKDIR /
 EXPOSE 80
-COPY app /
+COPY docker/payment/app /
 
 RUN	chmod +x /app && \
 	chown -R ${SERVICE_USER}:${SERVICE_GROUP} /app && \
