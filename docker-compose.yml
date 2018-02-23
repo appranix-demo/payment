@@ -4,7 +4,7 @@ services:
     payment:
         build:
             context: .
-            dockerfile: docker/payment/Dockerfile
+            dockerfile: docker/payment/Dockerfile-release
         image: veeresh27/payment
         hostname: payment
         restart: always

@@ -12,8 +12,8 @@ node {
           sh "docker login -u ${env.USERNAME} -p ${env.PASSWORD}"
           sh "docker tag veeresh27/payment:latest veeresh27/payment:${env.BUILD_ID}"
           sh "docker push veeresh27/payment:${env.BUILD_ID}"
-          sh "docker rmi veeresh27/orders:${env.BUILD_ID}"
-          sh "docker rmi veeresh27/orders:latest"
+          sh "docker rmi veeresh27/payment:${env.BUILD_ID}"
+          sh "docker rmi veeresh27/payment:latest"
         }
    }
 

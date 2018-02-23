@@ -2,8 +2,6 @@
 
 set -ev
 
-SCRIPT_DIR=$(dirname "$0")
-
 if [[ -z "$GROUP" ]] ; then
     echo "Cannot find GROUP env var"
     exit 1
@@ -14,22 +12,41 @@ if [[ -z "$COMMIT" ]] ; then
     exit 1
 fi
 
-if [[ "$(uname)" == "Darwin" ]]; then
-    DOCKER_CMD=docker
-else
-    DOCKER_CMD="docker"
-fi
-CODE_DIR=$(cd $SCRIPT_DIR/..; pwd)
-echo $CODE_DIR
+push() {
+    DOCKER_PUSH=1;
+    while [ $DOCKER_PUSH -gt 0 ] ; do
+        echo "Pushing $1";
+        docker push $1;
+        DOCKER_PUSH=$(echo $?);
+        if [[ "$DOCKER_PUSH" -gt 0 ]] ; then
+            echo "Docker push failed with exit code $DOCKER_PUSH";
+        fi;
+    done;
+}
 
-cp -r $CODE_DIR/cmd/ $CODE_DIR/docker/payment/cmd/
-cp $CODE_DIR/*.go $CODE_DIR/docker/payment/
-mkdir $CODE_DIR/docker/payment/vendor && cp $CODE_DIR/vendor/manifest $CODE_DIR/docker/payment/vendor/
+tag_and_push_all() {
+    if [[ -z "$1" ]] ; then
+        echo "Please pass the tag"
+        exit 1
+    else
+        TAG=$1
+    fi
+    for m in ./docker/*/; do
+        REPO=${GROUP}/$(basename $m)
+        if [[ "$COMMIT" != "$TAG" ]]; then
+            docker tag ${REPO}:${COMMIT} ${REPO}:${TAG}
+        fi
+        push "$REPO:$TAG";
+    done;
+}
 
-REPO=${GROUP}/$(basename payment);
+# Push snapshot when in master
+if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+    tag_and_push_all master-${COMMIT:0:8}
+fi;
 
-$DOCKER_CMD build -t ${REPO}-dev -f $CODE_DIR/docker/payment/Dockerfile $CODE_DIR/docker/payment;
-$DOCKER_CMD create --name payment ${REPO}-dev;
-$DOCKER_CMD cp payment:/app/main $CODE_DIR/docker/payment/app;
-$DOCKER_CMD rm payment;
-$DOCKER_CMD build -t ${REPO}:${COMMIT} -f $CODE_DIR/docker/payment/Dockerfile-release $CODE_DIR/docker/payment;
+# Push tag and latest when tagged
+if [ -n "$TRAVIS_TAG" ]; then
+    tag_and_push_all ${TRAVIS_TAG}
+    tag_and_push_all latest
+fi;
